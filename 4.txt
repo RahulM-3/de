@@ -1,0 +1,139 @@
+If you're working directly in the **Spark Shell** (Scala REPL), you can use the following **commands** to perform basic data manipulations using Spark DataFrames.
+
+---
+
+### **1. Start Spark Shell**
+First, open a terminal and start the **Spark Shell** by running:
+
+```sh
+spark-shell
+```
+
+---
+
+### **2. Create a DataFrame**
+#### **Using a Sequence (Without Explicit Schema)**
+```scala
+val df = Seq(
+  (1, "Alice", 25),
+  (2, "Bob", 30),
+  (3, "Charlie", 35)
+).toDF("ID", "Name", "Age")
+
+df.show()
+```
+
+#### **Using an Explicit Schema**
+```scala
+import org.apache.spark.sql.types._
+import org.apache.spark.sql.Row
+
+val schema = StructType(Array(
+  StructField("ID", IntegerType, nullable = false),
+  StructField("Name", StringType, nullable = false),
+  StructField("Age", IntegerType, nullable = false)
+))
+
+val data = Seq(
+  Row(1, "Alice", 25),
+  Row(2, "Bob", 30),
+  Row(3, "Charlie", 35)
+)
+
+val df = spark.createDataFrame(
+  spark.sparkContext.parallelize(data),
+  schema
+)
+
+df.show()
+```
+
+---
+
+### **3. Select and Filter Data**
+```scala
+// Select specific columns
+df.select("Name", "Age").show()
+
+// Filter rows where Age > 28
+df.filter(df("Age") > 28).show()
+```
+
+---
+
+### **4. Add, Update, and Drop Columns**
+```scala
+import org.apache.spark.sql.functions._
+
+// Add a new column with default value
+val dfWithCountry = df.withColumn("Country", lit("USA"))
+
+// Update Age by adding 2
+val dfUpdatedAge = dfWithCountry.withColumn("Age", col("Age") + 2)
+
+// Drop a column
+val dfDropped = dfUpdatedAge.drop("Country")
+
+dfDropped.show()
+```
+
+---
+
+### **5. Group and Aggregate Data**
+```scala
+// Count occurrences of each Age
+df.groupBy("Age").count().show()
+
+// Compute Average Age
+df.agg(avg("Age")).show()
+```
+
+---
+
+### **6. Sorting and Ordering**
+```scala
+// Sort by Age Ascending
+df.orderBy("Age").show()
+
+// Sort by Age Descending
+df.orderBy(col("Age").desc).show()
+```
+
+---
+
+### **7. Join DataFrames**
+```scala
+val df2 = Seq(
+  (1, "New York"),
+  (2, "Los Angeles"),
+  (3, "Chicago")
+).toDF("ID", "City")
+
+// Inner Join
+val dfJoined = df.join(df2, Seq("ID"), "inner")
+
+dfJoined.show()
+```
+
+---
+
+### **8. Handling Missing Values**
+```scala
+// Drop rows with null values
+df.na.drop().show()
+
+// Fill missing values
+df.na.fill(Map("Age" -> 30, "Name" -> "Unknown")).show()
+```
+
+---
+
+### **9. Save DataFrame to a File**
+```scala
+df.write.mode("overwrite").csv("output.csv") // Save as CSV
+df.write.mode("overwrite").parquet("output.parquet") // Save as Parquet
+```
+
+---
+
+These commands can be run directly inside the **Spark Shell**. Let me know if you need anything else! 🚀
