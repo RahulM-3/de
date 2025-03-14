@@ -1,0 +1,109 @@
+-- Creating Students Table
+CREATE TABLE studentss (
+    student_id INT PRIMARY KEY,
+    student_name VARCHAR2(100),
+    email VARCHAR2(100),
+    date_of_birth DATE
+)
+
+-- Creating Professors Table
+CREATE TABLE professors (
+    professor_id INT PRIMARY KEY,
+    professor_name VARCHAR2(100),
+    department VARCHAR2(100)
+)
+
+-- Creating Courses Table
+CREATE TABLE courses (
+    course_id INT PRIMARY KEY,
+    course_name VARCHAR2(100),
+    professor_id INT,
+    FOREIGN KEY (professor_id) REFERENCES professors(professor_id)
+)
+
+-- Creating Enrollments Table
+CREATE TABLE enrollments (
+    enrollment_id INT PRIMARY KEY,
+    student_id INT,
+    course_id INT,
+    enrollment_date DATE,
+    grade CHAR(2),
+    FOREIGN KEY (student_id) REFERENCES studentss(student_id),
+    FOREIGN KEY (course_id) REFERENCES courses(course_id)
+)
+
+-- Inserting data into students table
+INSERT INTO studentss (student_id, student_name, email, date_of_birth) VALUES (1, 'Alice Brown', 'alice.brown@email.com', TO_DATE('2000-05-15', 'YYYY-MM-DD'))
+INSERT INTO studentss (student_id, student_name, email, date_of_birth) VALUES (2, 'Bob White', 'bob.white@email.com', TO_DATE('1999-11-20', 'YYYY-MM-DD'))
+INSERT INTO studentss (student_id, student_name, email, date_of_birth) VALUES (3, 'Charlie Green', 'charlie.green@email.com', TO_DATE('2001-02-10', 'YYYY-MM-DD'))
+
+-- Inserting data into professors table
+INSERT INTO professors (professor_id, professor_name, department) VALUES (1, 'Dr. Smith', 'Mathematics')
+INSERT INTO professors (professor_id, professor_name, department) VALUES (2, 'Dr. Johnson', 'Computer Science')
+
+-- Inserting data into courses table
+INSERT INTO courses (course_id, course_name, professor_id) VALUES (1, 'Calculus 101', 1)
+INSERT INTO courses (course_id, course_name, professor_id) VALUES (2, 'Data Structures', 2)
+INSERT INTO courses (course_id, course_name, professor_id) VALUES (3, 'Discrete Mathematics', 1)
+
+-- Inserting data into enrollments table
+INSERT INTO enrollments (enrollment_id, student_id, course_id, enrollment_date, grade) VALUES (1, 1, 1, TO_DATE('2025-01-15', 'YYYY-MM-DD'), 'A')
+INSERT INTO enrollments (enrollment_id, student_id, course_id, enrollment_date, grade) VALUES (2, 2, 2, TO_DATE('2025-01-16', 'YYYY-MM-DD'), 'B')
+INSERT INTO enrollments (enrollment_id, student_id, course_id, enrollment_date, grade) VALUES (3, 3, 3, TO_DATE('2025-01-17', 'YYYY-MM-DD'), 'C')
+INSERT INTO enrollments (enrollment_id, student_id, course_id, enrollment_date, grade) VALUES (4, 1, 2, TO_DATE('2025-01-18', 'YYYY-MM-DD'), 'B')
+
+-- Query 1: List all students and their enrolled courses
+SELECT 
+    s.student_name, 
+    c.course_name
+FROM studentss s
+JOIN enrollments e ON s.student_id = e.student_id
+JOIN courses c ON e.course_id = c.course_id
+
+-- Query 2: Find the total number of students enrolled in each course
+SELECT 
+    c.course_name,
+    COUNT(e.student_id) AS total_enrolled
+FROM courses c
+JOIN enrollments e ON c.course_id = e.course_id
+GROUP BY c.course_name
+
+-- Query 3: Find the average grade for each course
+SELECT 
+    c.course_name,
+    AVG(CASE 
+            WHEN e.grade = 'A' THEN 4
+            WHEN e.grade = 'B' THEN 3
+            WHEN e.grade = 'C' THEN 2
+            ELSE 0 
+        END) AS average_grade
+FROM courses c
+JOIN enrollments e ON c.course_id = e.course_id
+GROUP BY c.course_name
+
+-- Query 4: Find the professor with the most enrolled students
+SELECT 
+    p.professor_name,
+    COUNT(e.student_id) AS total_students
+FROM professors p
+JOIN courses c ON p.professor_id = c.professor_id
+JOIN enrollments e ON c.course_id = e.course_id
+GROUP BY p.professor_name
+HAVING COUNT(e.student_id) = (
+    SELECT MAX(student_count) 
+    FROM (
+        SELECT COUNT(e.student_id) AS student_count
+        FROM courses c
+        JOIN enrollments e ON c.course_id = e.course_id
+        GROUP BY c.course_id
+    )
+)
+
+-- Query 5: List students who have enrolled in more than one course
+SELECT 
+    s.student_name,
+    COUNT(e.course_id) AS courses_enrolled
+FROM studentss s
+JOIN enrollments e ON s.student_id = e.student_id
+GROUP BY s.student_name
+HAVING COUNT(e.course_id) > 1
