@@ -1,0 +1,97 @@
+-- Create Department table
+CREATE TABLE Department (
+    department_id SERIAL PRIMARY KEY,
+    department_name VARCHAR(100) NOT NULL
+);
+
+-- Create Student table
+CREATE TABLE Student (
+    student_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    date_of_birth DATE NOT NULL
+);
+
+-- Create Professor table
+CREATE TABLE Professor (
+    professor_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    department_id INT,
+    FOREIGN KEY (department_id) REFERENCES Department(department_id) ON DELETE SET NULL
+);
+
+-- Create Course table
+CREATE TABLE Course (
+    course_id SERIAL PRIMARY KEY,
+    course_name VARCHAR(100) NOT NULL,
+    department_id INT,
+    credits INT NOT NULL,
+    FOREIGN KEY (department_id) REFERENCES Department(department_id) ON DELETE SET NULL
+);
+
+-- Create Enrollment table
+CREATE TABLE Enrollment (
+    student_id INT,
+    course_id INT,
+    enrollment_date DATE NOT NULL,
+    PRIMARY KEY (student_id, course_id),
+    FOREIGN KEY (student_id) REFERENCES Student(student_id) ON DELETE CASCADE,
+    FOREIGN KEY (course_id) REFERENCES Course(course_id) ON DELETE CASCADE
+);
+
+-- Create Teaches table
+CREATE TABLE Teaches (
+    professor_id INT,
+    course_id INT,
+    PRIMARY KEY (professor_id, course_id),
+    FOREIGN KEY (professor_id) REFERENCES Professor(professor_id) ON DELETE CASCADE,
+    FOREIGN KEY (course_id) REFERENCES Course(course_id) ON DELETE CASCADE
+);
+
+-- Sample data insertion
+
+-- Insert departments
+INSERT INTO Department (department_name) VALUES
+('Computer Science'),
+('Mathematics'),
+('Electrical Engineering');
+
+-- Insert students
+INSERT INTO Student (name, email, date_of_birth) VALUES
+('John Doe', 'john.doe@example.com', '2000-05-15'),
+('Jane Smith', 'jane.smith@example.com', '2001-07-20');
+
+-- Insert professors
+INSERT INTO Professor (name, email, department_id) VALUES
+('Dr. Alan Turing', 'alan.turing@university.com', 1),
+('Dr. Euclid', 'euclid@university.com', 2);
+
+-- Insert courses
+INSERT INTO Course (course_name, department_id, credits) VALUES
+('Data Structures', 1, 3),
+('Discrete Mathematics', 2, 4),
+('Circuits', 3, 3);
+
+-- Insert enrollments
+INSERT INTO Enrollment (student_id, course_id, enrollment_date) VALUES
+(1, 1, '2025-02-01'),
+(1, 2, '2025-02-02'),
+(2, 3, '2025-02-03');
+
+-- Insert teaches
+INSERT INTO Teaches (professor_id, course_id) VALUES
+(1, 1),  -- Dr. Alan Turing teaches Data Structures
+(2, 2);  -- Dr. Euclid teaches Discrete Mathematics
+
+SELECT s.name AS student_name, c.course_name
+FROM Student s
+JOIN Enrollment e ON s.student_id = e.student_id
+JOIN Course c ON e.course_id = c.course_id
+WHERE c.course_name = 'Data Structures';
+
+SELECT p.name AS professor_name, c.course_name
+FROM Professor p
+JOIN Teaches t ON p.professor_id = t.professor_id
+JOIN Course c ON t.course_id = c.course_id
+WHERE c.course_name = 'Discrete Mathematics';
